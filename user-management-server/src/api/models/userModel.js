@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { jwtSecret, jwtExpirationInterval } = require('../../config/vars');
 
 const userSchema = new mongoose.Schema({
@@ -25,6 +26,7 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    emailVerifyToken: String,
     createdAt : {
         type: Date,
         default: new Date()
