@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Please provide a username"],
     },
+    Name : String,
     password : {
         type: String,
         required: [true, "Please provide a username"],
@@ -27,6 +28,22 @@ const userSchema = new mongoose.Schema({
         default: false
     },
     emailVerifyToken: String,
+
+    website: String,
+    Bio: String,
+    ProfilePhoto: String,
+
+    Settings : {
+        PrivateAccount : {
+            type: Boolean,
+            default : false,
+        },
+        Notifications : {
+            type : Boolean,
+            default : true,
+        }
+    },
+
     createdAt : {
         type: Date,
         default: new Date()
@@ -55,4 +72,14 @@ userSchema.methods.getSignedToken = function() {
     return jwt.sign({ id: this._id }, jwtSecret, { expiresIn: jwtExpirationInterval })
 }
 
+userSchema.methods.getAccessibleData = function() {
+    const accessibleData = {};
+    const fields = ['_id', 'Name', 'emailId', 'ProfilePhoto', 'createdAt'];
+
+    fields.forEach((field) => {
+        accessibleData[field] = this[field];
+    });
+
+    return accessibleData;
+}
 module.exports = mongoose.model("User", userSchema);
