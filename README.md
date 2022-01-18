@@ -7,6 +7,7 @@ I have used,
     For Database - MongoDB.
     For Email Verification - Ethereal, Nodemailer.
     For token generation - jsonwebtoken (JWT).
+    For Image Upload - Cloudinary, Multer.
     
 
 
@@ -14,11 +15,23 @@ I have used,
 
 ### The code basically includes:
 
+1. User-Management Module
 - Register, Login.
 - Forgot password, reset password and register a new user with email verification.
 - Update personal information.
 - Fetch user with id. (with restrictions)
 - Search users with information (Name, username, location etc.)
+
+2. Friends Module
+- Send friend request.
+- Approve/reject friend request.
+- Remove friend.
+- Friend Suggestions.
+- Follow/Unfollow User.
+- Block User.
+
+3. Image Upload Service.
+- Upload, Replace, Delete photo.
 
 ### Install dependencies for user-management-server.
 
