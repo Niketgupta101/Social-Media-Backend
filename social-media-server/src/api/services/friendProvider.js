@@ -27,19 +27,27 @@ exports.getFriendRequests = async (id) => {
 
 exports.sendRequest = async (id, userId, next) => {
     try {
-        const user = await Friends.findOne({ user: userId });
+        const user = await Friends.findOne({ user: userId }).populate('user','blockedUsers');
+
+        const isBlocked = user.user.blockedUsers.findIndex(i => i.user.valueOf() === id);
+        if(isBlocked !== -1)
+        return next(new ErrorResponse("user is blocked!!", 400));
 
         const index = user.friends.findIndex(i => i.user.valueOf()===id);
         if(index!==-1)
-        next( new ErrorResponse('Already a friend.', 400));
+        return next( new ErrorResponse('Already a friend.', 400));
 
         const ind = user.sentRequests.findIndex(i => i.user.valueOf()===id);
         if(ind !== -1)
-        next( new ErrorResponse('Friend Request already sent', 400));
+        return next( new ErrorResponse('Friend Request already sent', 400));
 
-        const toUser = await Friends.findOne({ user: id });
+        const toUser = await Friends.findOne({ user: id }).populate('user', 'blockedUsers');
         if(!toUser)
-        next(new ErrorResponse('No such user exist', 404));
+        return  next(new ErrorResponse('No such user exist', 404));
+
+        const isBlockedbyUser = user.user.blockedUsers.findIndex(i => i.user.valueOf() === id);
+        if(isBlockedbyUser !== -1)
+        return next(new ErrorResponse("Can't send, you are blocked!!", 400));
 
         toUser.pendingRequests.push({ user: userId });
         await toUser.save();

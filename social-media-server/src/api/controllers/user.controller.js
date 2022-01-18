@@ -35,10 +35,11 @@ exports.changeAvatar = async (req, res, next) => {
 };
 
 exports.blockUser = async (req, res, next) => {
-  const id = req.params.id;
+  const id = req.params.userId;
+  const userId = req.user._id.valueOf();
 
   try {
-    const response = await blockUserWithId(id, next);
+    const response = await blockUserWithId(id, userId, next);
 
     res.status(201).json(response);
   } catch (error) {
@@ -48,9 +49,10 @@ exports.blockUser = async (req, res, next) => {
 
 exports.unblockUser = async (req, res, next) => {
   const id = req.params.id;
+  const userId = req.user._id.valueOf();
 
   try {
-    const response = await unblockUserWithId(id, next);
+    const response = await unblockUserWithId(id, userId, next);
 
     res.status(201).json(response);
   } catch (error) {

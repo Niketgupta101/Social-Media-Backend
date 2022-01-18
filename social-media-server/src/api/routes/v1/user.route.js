@@ -11,10 +11,10 @@ router.get('/verifyEmail/:verifyToken', verifyEmail);
 router.put('/avatar/:id', changeAvatar);
 
 // To block a user.
-router.put('/block/:userId', blockUser);
+router.put('/block/:userId', protect, blockUser);
 
 // To unblock a user.
-router.put('/unblock/:userId', unblockUser);
+router.put('/unblock/:userId', protect, unblockUser);
 
 // To fetch user with given id(as param) with restrictions.
 router.get('/fetchUser/:id', protect, fetchUser);

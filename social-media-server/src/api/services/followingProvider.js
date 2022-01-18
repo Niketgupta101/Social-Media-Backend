@@ -34,9 +34,13 @@ exports.sendFollowWithId = async (followingId, userId, next) => {
         if(index!==-1)
         next( new ErrorResponse('Already sent a follow request.', 400));
 
-        const followingUser = await Follower.findOne({ user: id });
+        const followingUser = await Follower.findOne({ user: id }).populate('user','blockedUsers');
         if(!followingUser)
         next(new ErrorResponse('No such user exist', 404));
+
+        const isBlocked = await followingUser.user.blockedUsers.findIndex(i => i.user.valueOf()===userId);
+        if(isBlocked !== -1)
+        return next(new ErrorResponse("You have been blocked by user", 400));
 
         followingUser.receivedRequests.push({ user: userId });
         await followingUser.save();

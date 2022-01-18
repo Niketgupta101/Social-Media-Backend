@@ -39,7 +39,7 @@ exports.registerUser = async (user, path) => {
 exports.loginUser = async ( emailIdOrUsername, password, next ) => {
     try {
         const user = await User.findOne({ $or: [ { username: emailIdOrUsername }, { emailId: emailIdOrUsername } ] }).select("+password");
-
+        
         if(!user) return next(new ErrorResponse("Invalid Credentials", 401));
 
         const check = await user.matchPasswords(password);

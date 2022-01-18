@@ -40,18 +40,20 @@ exports.updateAvatar = async (id, path, next) => {
     }
 }
 
-exports.blockUserWithId = async (id, next) => {
+exports.blockUserWithId = async (id, userId, next) => {
     try {
-        const user = await User.findById(id);
-        if(!user) next(new ErrorResponse("No user with given Id exists.", 404));
+        const loggeduser = await User.findOne({ _id: userId });
 
-        const index = user.blockedUsers.findIndex(i => i.user.valueOf() === id );
-        if(index!== -1) next(new ErrorResponse("Already Blocked.", 400));
+        const user = await User.findOne({ _id: id });
+        if(!user) return next(new ErrorResponse("No user with given Id exists.", 404));
 
-        user.blockedUsers.push({ user: id });
-        await user.save();
+        const index = loggeduser.blockedUsers.findIndex(i => i.user.valueOf() === id );
+        if(index!== -1) return next(new ErrorResponse("Already Blocked.", 400));
 
-        return { success: true, message: "Blocked successfully.", user };
+        loggeduser.blockedUsers.push({ user: id });
+        await loggeduser.save();
+
+        return { success: true, message: "Blocked successfully.", user: loggeduser };
     } catch (error) {
         throw error;
     }
@@ -59,11 +61,11 @@ exports.blockUserWithId = async (id, next) => {
 
 exports.unblockUserWithId = async (id, next) => {
     try {
-        const user = await User.findById(id);
-        if(!user) next(new ErrorResponse("No user with given Id exists.", 404));
+        const user = await User.findOne({ _id: id });
+        if(!user) return next(new ErrorResponse("No user with given Id exists.", 404));
 
         const index = user.blockedUsers.findIndex(i => i.user.valueOf() === id );
-        if(index === -1) next(new ErrorResponse("User not Blocked.", 400));
+        if(index === -1) return next(new ErrorResponse("User not Blocked.", 400));
 
         user.blockedUsers = user.blockedUsers.filter(i => i.user.valueOf()!==id);
         await user.save();
