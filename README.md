@@ -47,7 +47,7 @@ I have used,
     npm install
 ```
 
-### Enter your details in .env file and connect to your db.
+### Enter your details in .env file (refer .env.example) and connect to your db.
 
 ### Run the Servers.
 
