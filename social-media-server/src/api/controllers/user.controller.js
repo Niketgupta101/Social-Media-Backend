@@ -101,9 +101,11 @@ exports.getAllUsers = async (req, res, next) => {
 
 exports.searchUsers = async (req, res, next) => {
   const info = req.params.info;
+  let pagelimit = req.params.pagelimit || 20;
+  let pageno = req.params.pageno || 1;
 
   try {
-    const users = await fetchUsersWithInfo(info, next);
+    const users = await fetchUsersWithInfo(info, pagelimit, pageno, next);
 
     res.status(200).json({ success: true, data: users });
   } catch (err) {

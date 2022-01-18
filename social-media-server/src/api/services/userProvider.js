@@ -122,9 +122,11 @@ exports.editUserWithId = async (updatedDetails, _id) => {
     }
 }
 
-exports.fetchUsersWithInfo = async (info, next) => {
+exports.fetchUsersWithInfo = async (info, pagelimit, pageno, next) => {
     try {
-        let users = await User.find({ $or: [ { username: info }, { Name: info } ] });
+        let users = await User.find(
+            { $text: { $search: `${info}` } }
+         ).sort( { score: { $meta: "textScore" } } ).skip(Math.max(0,pageno-1)*pagelimit).limit(pagelimit);
 
         if(!users) return next(new ErrorResponse("No user with given info found", 404));
 

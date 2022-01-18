@@ -7,16 +7,16 @@ const Schema = mongoose.Schema;
 
 const userSchema = new mongoose.Schema({
     username : { type: String, required: [true, "Please provide a username"], unique: true },
-    Name : String,
+    Name : { type: String, text: true, index: true },
     password : { type: String, required: [true, "Please provide a username"], minlength: 6, select: false },
     emailId : { type: String, required: [true, "Please provide a email"], unique: true },
 
     avatar: { type: String },
     cloudinary_id: String,
-    
-    location: String,
-    college_city: String,
-    college_name: String,
+
+    location: { type: String, text: true, index: true },
+    college_city: { type: String, text: true, index: true },
+    college_name: { type: String, text: true, index: true },
 
     resetPasswordToken: String,
     resetPasswordExpire: Date,
@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
     emailVerifyToken: String,
 
     website: String,
-    Bio: String,
+    Bio: { type: String, text: true, index: true },
 
     blockedUsers: { type: [ { user: { type: Schema.ObjectId, ref: 'User' } } ], default: [] },
 

@@ -26,7 +26,7 @@ router.put('/editUser/:id', protect, editUser);
 router.get('/fetchAllUsers', protect, getAllUsers);
 
 // to fetch user with given info like name loaction etc.
-router.get('/searchUsersWithInfo/:info', protect, searchUsers);
+router.get('/searchUsersWithInfo/:info/:pageno/:pagelimit', protect, searchUsers);
 
 // to remove user.
 router.delete('/:id', protect, removeUser)
