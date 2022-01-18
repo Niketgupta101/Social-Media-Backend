@@ -30,13 +30,15 @@ app.post('/sendEmail', (req,res) => {
             subject: subject,
             html: html
     };
-
     transporter.sendMail(mailOptions, function(error, info) {
         if(error)
-        res.send(error);
+        {
+        res.status(400).send('mail not sent');
+        }
         else{
             console.log("email sent");
-        res.send('verified');}
+        res.status(200).send('verified');
+        }
     })
 })
 
