@@ -76,9 +76,9 @@ exports.unblockUserWithId = async (id, next) => {
     }
 }
 
-exports.fetchAllUsers = async () => {
+exports.fetchAllUsers = async (pagelimit, pageno) => {
     try {
-        var users = await User.find();
+        var users = await User.find().skip(Math.max(0,pageno-1)*pagelimit).limit(pagelimit);
         users.map((user) => user.getAccessibleData());
 
         return users;

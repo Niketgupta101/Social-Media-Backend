@@ -21,12 +21,7 @@ exports.registerUser = async (user, path) => {
 
         const newUser = await User.create(data);
 
-        newUser.emailVerified = true;
-        newUser.emailVerifyToken = undefined;
-        newUser.setUp();
-        await newUser.save();
-
-        // await sendConfirmationMail(newUser.emailId, newUser.emailVerifyToken);
+        await sendConfirmationMail(newUser.emailId, newUser.emailVerifyToken);
 
         const token = newUser.getSignedToken();
 

@@ -23,7 +23,7 @@ router.get('/fetchUser/:id', protect, fetchUser);
 router.put('/editUser/:id', protect, editUser);
 
 // To fetch all the users with restriction( only username, id, Name)
-router.get('/fetchAllUsers', protect, getAllUsers);
+router.get('/fetchAllUsers/:pageno/:pagelimit', protect, getAllUsers);
 
 // to fetch user with given info like name loaction etc.
 router.get('/searchUsersWithInfo/:info/:pageno/:pagelimit', protect, searchUsers);

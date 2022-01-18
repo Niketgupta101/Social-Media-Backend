@@ -13,10 +13,10 @@ const { protect } = require("../../middlewares/auth");
 const router = express.Router();
 
 // To get all the friends of the user with a given userId.
-router.get(`/Friends/:userId`, protect, fetchFriends);
+router.get(`/Friends/:userId/:pageno/:pagelimit`, protect, fetchFriends);
 
 // To get all Friend requests of the user with a given userId.
-router.get(`/FriendRequests/:userId`, protect, fetchFriendRequests);
+router.get(`/FriendRequests/:userId/:pageno/:pagelimit`, protect, fetchFriendRequests);
 
 // To send friend requests with a given userId.
 router.put(`/FriendRequest/:userId`, protect, sendFriendRequest);

@@ -91,8 +91,10 @@ exports.editUser = async (req, res, next) => {
 };
 
 exports.getAllUsers = async (req, res, next) => {
+  let pagelimit = req.params.pagelimit || 20;
+  let pageno = req.params.pageno || 1;
   try {
-    const users = await fetchAllUsers();
+    const users = await fetchAllUsers(pagelimit, pageno);
     res.status(200).json({ success: true, data: users });
   } catch (error) {
     next(error);
