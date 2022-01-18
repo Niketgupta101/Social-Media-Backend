@@ -32,11 +32,11 @@ exports.approveFollowerWithId = async (followerId, userId, next) => {
 
         const index = user.receivedRequests.findIndex(i => i.user.valueOf() === followerId);
         if(index === -1)
-        next(new ErrorResponse('No such request exist to get approved.', 404));
+        return next(new ErrorResponse('No such request exist to get approved.', 404));
 
         const follower = await Following.findOne({ user: followerId });
         if(!follower)
-        next(new ErrorResponse('No user corresponding to request exist', 404));
+        return next(new ErrorResponse('No user corresponding to request exist', 404));
 
         follower.sentRequests = follower.sentRequests.filter(i => i.user.valueOf()!==userId);
         follower.following.push({ user: userId });
@@ -58,11 +58,11 @@ exports.rejectFollowerWithId = async (followerId, userId, next) => {
 
         const index = user.receivedRequests.findIndex(i => i.user.valueOf() === followerId);
         if(index === -1)
-        next(new ErrorResponse('No such request exist to get rejected.', 404));
+        return next(new ErrorResponse('No such request exist to get rejected.', 404));
 
         const follower = await Following.findOne({ user: followerId });
         if(!follower)
-        next(new ErrorResponse('No user corresponding to request exist', 404));
+        return next(new ErrorResponse('No user corresponding to request exist', 404));
 
         follower.sentRequests = follower.sentRequests.filter(i => i.user.valueOf()!==userId);
         await follower.save();
@@ -82,11 +82,11 @@ exports.removeFollowerWithId = async (followerId, userId, next) => {
 
         const index = user.followers.findIndex(i => i.user.valueOf() === followerId);
         if(index === -1)
-        next(new ErrorResponse('No such follower exist to get removed.', 404));
+        return next(new ErrorResponse('No such follower exist to get removed.', 404));
 
         const follower = await Following.findOne({ user: followerId });
         if(!follower)
-        next(new ErrorResponse('No user corresponding to followerId exist', 404));
+        return next(new ErrorResponse('No user corresponding to followerId exist', 404));
 
         follower.following = follower.following.filter(i => i.user.valueOf()!==userId);
         await follower.save();
