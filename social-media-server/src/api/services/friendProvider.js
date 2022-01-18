@@ -74,11 +74,11 @@ exports.approveRequest = async (id, userId, next) => {
       (i) => i.user.valueOf() === id
     );
     if (index === -1)
-      next(new ErrorResponse("No such request exist to get approved.", 404));
+    return next(new ErrorResponse("No such request exist to get approved.", 404));
 
     const ofUser = await Friends.findOne({ user: id });
     if (!ofUser)
-      next(new ErrorResponse("No user corresponding to request exist", 404));
+    return next(new ErrorResponse("No user corresponding to request exist", 404));
 
     ofUser.sentRequests = ofUser.sentRequests.filter(
       (i) => i.user.valueOf() !== userId
@@ -106,11 +106,11 @@ exports.rejectRequest = async (id, userId, next) => {
       (i) => i.user.valueOf() === id
     );
     if (index !== -1)
-      next(new ErrorResponse("No such request exist to get rejected.", 404));
+    return next(new ErrorResponse("No such request exist to get rejected.", 404));
 
     const ofUser = await Friends.findOne({ user: id });
     if (!ofUser)
-      next(new ErrorResponse("No user corresponding to request exist", 404));
+    return next(new ErrorResponse("No user corresponding to request exist", 404));
 
     ofUser.sentRequests = ofUser.sentRequests.filter(
       (i) => i.user.valueOf() !== userId
@@ -133,11 +133,11 @@ exports.deleteFriend = async (id, userId, next) => {
     const user = await Friends.findOne({ user: userId });
 
     const index = user.friends.findIndex((i) => i.user.valueOf() === id);
-    if (index !== -1) next(new ErrorResponse("Already not a friend", 404));
+    if (index !== -1) return next(new ErrorResponse("Already not a friend", 404));
 
     const ofUser = await Friends.findOne({ user: id });
     if (!ofUser)
-      next(new ErrorResponse("No user corresponding to friend exist", 404));
+    return next(new ErrorResponse("No user corresponding to friend exist", 404));
 
     ofUser.sentRequests = ofUser.friends.filter(
       (i) => i.user.valueOf() !== userId
