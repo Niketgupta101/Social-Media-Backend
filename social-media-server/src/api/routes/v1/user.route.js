@@ -1,7 +1,6 @@
 const express = require("express");
-const { verifyEmail, fetchUser, editUser, searchUsers, getAllUsers, removeUser, changeAvatar } = require("../../controllers/user.controller");
+const { verifyEmail, fetchUser, editUser, searchUsers, getAllUsers, removeUser, changeAvatar, blockUser, unblockUser } = require("../../controllers/user.controller");
 const { protect } = require('../../middlewares/auth');
-const { changePhoto } = require("../../services/uploadProvider");
 
 const router = express.Router();
 
@@ -10,6 +9,12 @@ router.get('/verifyEmail/:verifyToken', verifyEmail);
 
 // To change profile photo.
 router.put('/avatar/:id', changeAvatar);
+
+// To block a user.
+router.put('/block/:userId', blockUser);
+
+// To unblock a user.
+router.put('/unblock/:userId', unblockUser);
 
 // To fetch user with given id(as param) with restrictions.
 router.get('/fetchUser/:id', protect, fetchUser);

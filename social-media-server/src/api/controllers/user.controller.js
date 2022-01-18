@@ -5,6 +5,8 @@ const {
   editUserWithId,
   fetchUsersWithInfo,
   removeUserWithId,
+  blockUserWithId,
+  unblockUserWithId
 } = require("../services/userProvider");
 
 // To verify emailId
@@ -31,6 +33,30 @@ exports.changeAvatar = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.blockUser = async (req, res, next) => {
+  const id = req.params.id;
+
+  try {
+    const response = await blockUserWithId(id, next);
+
+    res.status(201).json(response);
+  } catch (error) {
+    next(error);
+  }
+}
+
+exports.unblockUser = async (req, res, next) => {
+  const id = req.params.id;
+
+  try {
+    const response = await unblockUserWithId(id, next);
+
+    res.status(201).json(response);
+  } catch (error) {
+    next(error);
+  }
+}
 
 // fetch user with the user id passed as a param
 //  -> If the userId passed matches with the id of the currently logged user then return the complete info of the user

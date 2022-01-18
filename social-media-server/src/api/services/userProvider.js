@@ -40,6 +40,40 @@ exports.updateAvatar = async (id, path, next) => {
     }
 }
 
+exports.blockUserWithId = async (id, next) => {
+    try {
+        const user = await User.findById(id);
+        if(!user) next(new ErrorResponse("No user with given Id exists.", 404));
+
+        const index = user.blockedUsers.findIndex(i => i.user.valueOf() === id );
+        if(index!== -1) next(new ErrorResponse("Already Blocked.", 400));
+
+        user.blockedUsers.push({ user: id });
+        await user.save();
+
+        return { success: true, message: "Blocked successfully.", user };
+    } catch (error) {
+        throw error;
+    }
+}
+
+exports.unblockUserWithId = async (id, next) => {
+    try {
+        const user = await User.findById(id);
+        if(!user) next(new ErrorResponse("No user with given Id exists.", 404));
+
+        const index = user.blockedUsers.findIndex(i => i.user.valueOf() === id );
+        if(index === -1) next(new ErrorResponse("User not Blocked.", 400));
+
+        user.blockedUsers = user.blockedUsers.filter(i => i.user.valueOf()!==id);
+        await user.save();
+
+        return { success: true, message: "Unblocked successfully.", user };
+    } catch (error) {
+        throw error;
+    }
+}
+
 exports.fetchAllUsers = async () => {
     try {
         var users = await User.find();
