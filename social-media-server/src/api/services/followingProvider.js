@@ -32,11 +32,11 @@ exports.sendFollowWithId = async (followingId, userId, next) => {
 
         const index = user.following.findIndex(i => i.user.valueOf()===followingId);
         if(index!==-1)
-        next( new ErrorResponse('Already sent a follow request.', 400));
+        return next( new ErrorResponse('Already sent a follow request.', 400));
 
         const followingUser = await Follower.findOne({ user: id }).populate('user','blockedUsers');
         if(!followingUser)
-        next(new ErrorResponse('No such user exist', 404));
+        return next(new ErrorResponse('No such user exist', 404));
 
         const isBlocked = await followingUser.user.blockedUsers.findIndex(i => i.user.valueOf()===userId);
         if(isBlocked !== -1)
@@ -60,11 +60,11 @@ exports.unfollowUserWithId = async (followingId, userId, next) => {
 
         const index = user.following.findIndex(i => i.user.valueOf() === followingId);
         if(index === -1)
-        next(new ErrorResponse('Already not following', 404));
+        return next(new ErrorResponse('Already not following', 404));
 
         const followingUser = await Follower.findOne({ user: followingId });
         if(!followingUser)
-        next(new ErrorResponse('No user corresponding to followingId exist', 404));
+        return next(new ErrorResponse('No user corresponding to followingId exist', 404));
 
         followingUser.followers = followingUser.followers.filter(i => i.user.valueOf()!==userId);
         await followingUser.save();
