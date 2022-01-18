@@ -5,8 +5,8 @@ const emailValidator = require('email-validator');
 exports.register = async (req, res, next) => {
     const  user = req.body;
 
-    // if(!emailValidator.validate(user.emailId))
-    // return next(new ErrorResponse("Invalid Email-Id", 400));
+    if(!emailValidator.validate(user.emailId))
+    return next(new ErrorResponse("Invalid Email-Id", 400));
 
     try {
         const path = req.file.path;
