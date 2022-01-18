@@ -82,10 +82,10 @@ exports.removeFriend = async (req, res, next) => {
 };
 
 exports.friendSuggestions = async (req, res, next) => {
-  const id = req.params.userId;
+  const userId = req.params.userId;
 
   try {
-    const response = await suggestFriends(id);
+    const response = await suggestFriends(userId, next);
 
     res.status(201).json(response);
   } catch (error) {

@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema({
 
     avatar: { type: String },
     cloudinary_id: String,
+    
+    location: String,
+    college_city: String,
+    college_name: String,
 
     resetPasswordToken: String,
     resetPasswordExpire: Date,
