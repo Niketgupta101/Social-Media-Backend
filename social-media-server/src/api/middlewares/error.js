@@ -20,7 +20,7 @@ const errorHandler = (err, req, res, next) => {
 
     res.status(err.statusCode || 500).json({
         success: false,
-        error: error || "Something went wrong."
+        error: "Something went wrong."
     })
 }
 
