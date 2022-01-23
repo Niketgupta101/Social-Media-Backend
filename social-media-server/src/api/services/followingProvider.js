@@ -4,7 +4,7 @@ const ErrorResponse = require('../utils/errorResponse');
 
 exports.getFollowing = async (id) => {
     try {
-        const data = await Following.findOne({ user: id});
+        const data = await Following.find({ user: id});
 
         console.log(data);
 
@@ -16,7 +16,7 @@ exports.getFollowing = async (id) => {
 
 exports.getSentFollowRequests = async (id) => {
     try {
-        const data = await Following.findOne({ user: id });
+        const data = await Following.find({ user: id });
 
         console.log(data);
 
