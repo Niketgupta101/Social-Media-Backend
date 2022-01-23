@@ -4,7 +4,7 @@ const { fetchUsersWithInfo } = require("./userProvider");
 
 exports.getFriends = async (id) => {
   try {
-    const data = await Friends.findOne({ user: id });
+    const data = await Friends.find({ user: id });
 
     return data.friends;
   } catch (error) {
@@ -14,7 +14,7 @@ exports.getFriends = async (id) => {
 
 exports.getFriendRequests = async (id) => {
   try {
-    const data = await Friends.findOne({ user: id });
+    const data = await Friends.find({ user: id });
 
     return data.pendingRequests;
   } catch (error) {
@@ -155,16 +155,16 @@ exports.deleteFriend = async (id, userId, next) => {
 
 exports.suggestFriends = async (userId, next) => {
   try {
-    const user = await Friends.findOne({ user: userId }).populate("user");
+    const user = await Friends.find({ user: userId }).populate("user");
     let suggestionList = [];
 
     // Add friends of friends to the suggestion list.
     for (let friend of user.friends) {
-      let friendUser = await Friends.findOne({ user: friend.user.valueOf() });
+      let friendUser = await Friends.find({ user: friend.user.valueOf() });
       if( friendUser )
       {
         for (let nextFriend of friendUser.friends) {
-          let friendOfFriend = await Friends.findOne({
+          let friendOfFriend = await Friends.find({
             user: nextFriend.user.valueOf(),
           }).populate("user", "username");
           
