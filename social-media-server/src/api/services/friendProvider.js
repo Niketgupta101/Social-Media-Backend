@@ -1,22 +1,37 @@
 const Friends = require("../models/friend");
+const Users = require("../models/user");
 const ErrorResponse = require("../utils/errorResponse");
-const { fetchUsersWithInfo } = require("./userProvider");
+const mongoose = require('mongoose').Types.ObjectId;
 
-exports.getFriends = async (id) => {
+exports.getFriends = async (id, offset, pageLimit) => {
   try {
-    const data = await Friends.findOne({ user: id });
+    const data = await Friends.find({
+      $or: [
+        { fromUser: ObjectId(id), progress: "accepted" },
+        { toUser: ObjectId(id), progress: "accepted" },
+      ],
+    })
+      .skip(offset)
+      .limit(pageLimit);
 
-    return data.friends;
+    return data;
   } catch (error) {
     throw error;
   }
 };
 
-exports.getFriendRequests = async (id) => {
+exports.getFriendRequests = async (id, offset, pageLimit) => {
   try {
-    const data = await Friends.findOne({ user: id });
+    const data = await Friends.find({
+      $or: [
+        { fromUser: ObjectId(id), progress: "requested" },
+        { toUser: ObjectId(id), progress: "requested" },
+      ],
+    })
+      .skip(offset)
+      .limit(pageLimit);
 
-    return data.pendingRequests;
+    return data;
   } catch (error) {
     throw error;
   }
@@ -24,41 +39,35 @@ exports.getFriendRequests = async (id) => {
 
 exports.sendRequest = async (id, userId, next) => {
   try {
-    const user = await Friends.findOne({ user: userId }).populate(
-      "user",
-      "blockedUsers"
+    let isFriend = await Friends.findOne({
+      fromUser: ObjectId(userId),
+      toUser: ObjectId(id),
+    });
+
+    if (isFriend && isFriend.progress === "requested")
+      return next(new ErrorResponse("Friend request already sent.", 400));
+
+    if (isFriend && isFriend.progress === "accepted")
+      return next(new ErrorResponse("Already a friend.", 400));
+
+    let isBlocked = await Friends.findOne(
+      { _id: ObjectId(id) },
+      { _id: 0, blockedUsers: 1 }
     );
 
-    const isBlocked = user.user.blockedUsers.findIndex(
-      (i) => i.user.valueOf() === id
+    if (!isBlocked) return next(new ErrorResponse(`User doesn't exist.`, 404));
+
+    let index = await isBlocked.blockedUsers.findIndex(
+      (i) => i === ObjectId(userId)
     );
-    if (isBlocked !== -1)
-      return next(new ErrorResponse("user is blocked!!", 400));
+    if (index !== -1)
+      return next(new ErrorResponse(`You are being blocked by user`, 400));
 
-    const index = user.friends.findIndex((i) => i.user.valueOf() === id);
-    if (index !== -1) return next(new ErrorResponse("Already a friend.", 400));
-
-    const ind = user.sentRequests.findIndex((i) => i.user.valueOf() === id);
-    if (ind !== -1)
-      return next(new ErrorResponse("Friend Request already sent", 400));
-
-    const toUser = await Friends.findOne({ user: id }).populate(
-      "user",
-      "blockedUsers"
-    );
-    if (!toUser) return next(new ErrorResponse("No such user exist", 404));
-
-    const isBlockedbyUser = user.user.blockedUsers.findIndex(
-      (i) => i.user.valueOf() === id
-    );
-    if (isBlockedbyUser !== -1)
-      return next(new ErrorResponse("Can't send, you are blocked!!", 400));
-
-    toUser.pendingRequests.push({ user: userId });
-    await toUser.save();
-
-    user.sentRequests.push({ user: id });
-    await user.save();
+    await Friends.create({
+      fromUser: ObjectId(userId),
+      toUser: ObjectId(id),
+      progress: "requested",
+    });
 
     return { success: true, message: "Friend Request Sent." };
   } catch (error) {
@@ -68,31 +77,20 @@ exports.sendRequest = async (id, userId, next) => {
 
 exports.approveRequest = async (id, userId, next) => {
   try {
-    const user = await Friends.findOne({ user: userId });
+    let request = await Friends.findOne({
+      fromUser: ObjectId(userId),
+      toUser: ObjectId(id),
+    });
 
-    const index = user.pendingRequests.findIndex(
-      (i) => i.user.valueOf() === id
-    );
-    if (index === -1)
-    return next(new ErrorResponse("No such request exist to get approved.", 404));
+    if (!request) return next(new ErrorResponse(`No such request exist`, 404));
+    if (request.progress === "accepted")
+      return next(new ErrorResponse(`Already a friend`, 400));
 
-    const ofUser = await Friends.findOne({ user: id });
-    if (!ofUser)
-    return next(new ErrorResponse("No user corresponding to request exist", 404));
+    request.progress = "accepted";
 
-    ofUser.sentRequests = ofUser.sentRequests.filter(
-      (i) => i.user.valueOf() !== userId
-    );
-    ofUser.friends.push({ user: userId });
-    await ofUser.save();
+    await request.save();
 
-    user.pendingRequests = user.pendingRequests.filter(
-      (i) => i.user.valueOf() !== id
-    );
-    user.friends.push({ user: id });
-    await user.save();
-
-    return { success: true, message: "Friend Request Approved." };
+    return { success: true, message: "Friend request approved." };
   } catch (error) {
     throw error;
   }
@@ -100,27 +98,16 @@ exports.approveRequest = async (id, userId, next) => {
 
 exports.rejectRequest = async (id, userId, next) => {
   try {
-    const user = await Friends.findOne({ user: userId });
+    let request = await Friends.findOne({
+      fromUser: ObjectId(userId),
+      toUser: ObjectId(id),
+    });
 
-    const index = user.pendingRequests.findIndex(
-      (i) => i.user.valueOf() === id
-    );
-    if (index !== -1)
-    return next(new ErrorResponse("No such request exist to get rejected.", 404));
+    if (!request) return next(new ErrorResponse(`No such request exist`, 404));
+    if (request.progress === "accepted")
+      return next(new ErrorResponse(`Already a friend`, 400));
 
-    const ofUser = await Friends.findOne({ user: id });
-    if (!ofUser)
-    return next(new ErrorResponse("No user corresponding to request exist", 404));
-
-    ofUser.sentRequests = ofUser.sentRequests.filter(
-      (i) => i.user.valueOf() !== userId
-    );
-    await ofUser.save();
-
-    user.pendingRequests = user.pendingRequests.filter(
-      (i) => i.user.valueOf() !== id
-    );
-    await user.save();
+    await request.remove();
 
     return { success: true, message: "Friend Request Rejected." };
   } catch (error) {
@@ -130,22 +117,14 @@ exports.rejectRequest = async (id, userId, next) => {
 
 exports.deleteFriend = async (id, userId, next) => {
   try {
-    const user = await Friends.findOne({ user: userId });
+    let isFriend = await Friends.findOne({
+      fromUser: ObjectId(userId),
+      toUser: ObjectId(id),
+    });
 
-    const index = user.friends.findIndex((i) => i.user.valueOf() === id);
-    if (index !== -1) return next(new ErrorResponse("Already not a friend", 404));
+    if (!isFriend) return next(new ErrorResponse(`Already not a friend`, 400));
 
-    const ofUser = await Friends.findOne({ user: id });
-    if (!ofUser)
-    return next(new ErrorResponse("No user corresponding to friend exist", 404));
-
-    ofUser.sentRequests = ofUser.friends.filter(
-      (i) => i.user.valueOf() !== userId
-    );
-    await ofUser.save();
-
-    user.pendingRequests = user.friends.filter((i) => i.user.valueOf() !== id);
-    await user.save();
+    await isFriend.remove();
 
     return { success: true, message: "Friend Removed." };
   } catch (error) {
@@ -153,41 +132,50 @@ exports.deleteFriend = async (id, userId, next) => {
   }
 };
 
-exports.suggestFriends = async (userId, next) => {
+exports.suggestFriends = async (userId, location, college_city, college_name, offset, pageLimit, next) => {
   try {
-    const user = await Friends.findOne({ user: userId }).populate("user");
-    let suggestionList = [];
+    const friendList = await Friends.find({
+      $or: [
+        { fromUser: ObjectId(userId), progress: 'accepted' },
+        { toUser: ObjectId(userId), progress: 'accepted' }
+      ]
+    }, { _id: 0, fromUser: 1, toUser: 1 });
 
-    // Add friends of friends to the suggestion list.
-    for (let friend of user.friends) {
-      let friendUser = await Friends.findOne({ user: friend.user.valueOf() });
-      if( friendUser )
-      {
-        for (let nextFriend of friendUser.friends) {
-          let friendOfFriend = await Friends.findOne({
-            user: nextFriend.user.valueOf(),
-          }).populate("user", "username");
-          
-          if(friendOfFriend)
-          suggestionList = [...suggestionList, friendOfFriend.user];
-        }
-      }
+    let friendToFriendList = [],
+    for (let friend of friendList)
+    {
+      let friendToFriend = await Friends.find({$or: [
+        { fromUser: ObjectId(friend.fromUser), progress: 'accepted' },
+        { toUser: ObjectId(friend.fromUser), progress: 'accepted' },
+        { fromUser: ObjectId(friend.toUser), progress: 'accepted' },
+        { toUser: ObjectId(friend.toUser), progress: 'accepted' }
+      ]}, { _id: 0, fromUser: 1, toUser: 1 }).toArray();
+
+      friendToFriendList = friendToFriendList.concat(friendToFriend);
     }
 
-    //byLocation
-    let byLocation = await fetchUsersWithInfo(user.user.location, next);
-    // By college city
-    let byCollegeCity = await fetchUsersWithInfo(user.user.college_city, next);
-    // By college name
-    let byCollegeName = await fetchUsersWithInfo(user.user.college_name, next);
+    let friendToFriendIds = [];
+    for(let friend of friendToFriendList)
+    {
+      friendToFriendIds.push(friend.fromUser);
+      friendToFriendIds.push(friend.toUser);
+    }
+    for(let friend of friendList)
+    {
+      friendToFriendIds = friendToFriendIds.filter( i => i===friend.fromUser);
+      friendToFriendIds = friendToFriendIds.filter( i => i===friend.toUser);
+    }
 
-    suggestionList = suggestionList.concat(
-      byCollegeCity,
-      byCollegeName,
-      byLocation
-    );
+    let suggestFriends = await Users.find({
+        $or: [
+          { _id: { $in: friendToFriendIds } },
+          { location },
+          { college_city },
+          { college_name }
+        ]
+      }, { username: 1, Name: 1, emailId: 1, avatar: 1 }).skip(offset).limit(pageLimit);
 
-    return { success: true, data: suggestionList };
+    return { success: true, data: suggestFriends };
   } catch (error) {
     throw error;
   }
