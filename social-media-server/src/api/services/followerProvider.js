@@ -1,101 +1,90 @@
-const Follower = require('../models/follower');
-const Following = require('../models/following');
-const ErrorResponse = require('../utils/errorResponse');
+const Follow = require("../models/follow");
+const ErrorResponse = require("../utils/errorResponse");
+const ObjectId = require("mongoose").Types.ObjectId;
 
 exports.getFollowers = async (id) => {
-    try {
-        const data = await Follower.find({ user: id});
+  try {
+    const data = await Follow.find({
+      following: ObjectId(id),
+      progress: "accepted",
+    });
 
-        console.log(data);
+    console.log(data);
 
-        return data.followers;
-    } catch (error) {
-        throw error;
-    }
-}
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 exports.getReceivedFollowRequests = async (id) => {
-    try {
-        const data = await Follower.find({ user: id });
+  try {
+    const data = await Follow.find({
+      following: ObjectId(id),
+      progress: "requested",
+    });
 
-        console.log(data);
+    console.log(data);
 
-        return data.receivedRequests;
-    } catch (error) {
-        throw error;
-    }
-}
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 exports.approveFollowerWithId = async (followerId, userId, next) => {
-    try {
-        const user = await Follower.findOne({ user: userId });
+  try {
+    let request = await Follow.findOne({
+      follower: ObjectId(followerId),
+      following: ObjectId(userId),
+    });
 
-        const index = user.receivedRequests.findIndex(i => i.user.valueOf() === followerId);
-        if(index === -1)
-        return next(new ErrorResponse('No such request exist to get approved.', 404));
+    if (!request) return next(new ErrorResponse(`No such request exist`, 404));
+    if (request.progress === "accepted")
+      return next(new ErrorResponse(`Already a follower`, 400));
 
-        const follower = await Following.findOne({ user: followerId });
-        if(!follower)
-        return next(new ErrorResponse('No user corresponding to request exist', 404));
+    request.progress = "accepted";
 
-        follower.sentRequests = follower.sentRequests.filter(i => i.user.valueOf()!==userId);
-        follower.following.push({ user: userId });
-        await follower.save();
+    await request.save();
 
-        user.receivedRequests = user.receivedRequests.filter(i => i.user.valueOf()!==followerId);
-        user.followers.push({ user: followerId });
-        await user.save();
-
-        return { success: true, message: 'Friend Request Approved.'};
-    } catch (error) {
-        throw error;
-    }
-}
+    return { success: true, message: "Follow request approved." };
+  } catch (error) {
+    throw error;
+  }
+};
 
 exports.rejectFollowerWithId = async (followerId, userId, next) => {
-    try {
-        const user = await Follower.findOne({ user: userId });
-
-        const index = user.receivedRequests.findIndex(i => i.user.valueOf() === followerId);
-        if(index === -1)
-        return next(new ErrorResponse('No such request exist to get rejected.', 404));
-
-        const follower = await Following.findOne({ user: followerId });
-        if(!follower)
-        return next(new ErrorResponse('No user corresponding to request exist', 404));
-
-        follower.sentRequests = follower.sentRequests.filter(i => i.user.valueOf()!==userId);
-        await follower.save();
-
-        user.receivedRequests = user.receivedRequests.filter(i => i.user.valueOf()!==followerId);
-        await user.save();
-
-        return { success: true, message: 'Friend Request Rejected.'};
-    } catch (error) {
-        throw error;
-    }
-}
+  try {
+    let request = await Follow.findOne({
+        follower: ObjectId(followerId),
+        following: ObjectId(userId),
+      });
+  
+      if (!request) return next(new ErrorResponse(`No such request exist`, 404));
+      if (request.progress === "accepted")
+        return next(new ErrorResponse(`Already a follower`, 400));
+  
+      await request.remove();
+  
+      return { success: true, message: "Follow Request Rejected." };
+  } catch (error) {
+    throw error;
+  }
+};
 
 exports.removeFollowerWithId = async (followerId, userId, next) => {
-    try {
-        const user = await Follower.findOne({ user: userId });
-
-        const index = user.followers.findIndex(i => i.user.valueOf() === followerId);
-        if(index === -1)
-        return next(new ErrorResponse('No such follower exist to get removed.', 404));
-
-        const follower = await Following.findOne({ user: followerId });
-        if(!follower)
-        return next(new ErrorResponse('No user corresponding to followerId exist', 404));
-
-        follower.following = follower.following.filter(i => i.user.valueOf()!==userId);
-        await follower.save();
-
-        user.followers = user.followers.filter(i => i.user.valueOf()!==followerId);
-        await user.save();
-
-        return { success: true, message: 'Follower removed.'};
-    } catch (error) {
-        throw error;
-    }
-}
+  try {
+    let isFollower = await Friends.findOne({
+        follower: ObjectId(followerId),
+        following: ObjectId(userId),
+     });
+  
+      if (!isFollower) return next(new ErrorResponse(`Already not a follower`, 400));
+  
+      await isFollower.remove();
+  
+      return { success: true, message: "Follower Removed." };
+  } catch (error) {
+    throw error;
+  }
+};

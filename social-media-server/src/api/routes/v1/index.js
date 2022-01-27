@@ -4,6 +4,7 @@ const authRoutes = require('./auth.route.js');
 const friendRoutes = require('./friend.route.js');
 const followerRoutes = require('./friend.route.js');
 const followingRoutes = require('./friend.route.js');
+const postRoutes = require('./post.route.js');
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use('/auth', authRoutes);
 router.use('/friends', friendRoutes);
 router.use('/follower', followerRoutes);
 router.use('/following', followingRoutes);
+router.use('/post', postRoutes);
 
 module.exports = router;

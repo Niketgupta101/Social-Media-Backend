@@ -33,6 +33,14 @@ I have used,
 3. Image Upload Service.
 - Upload, Replace, Delete photo.
 
+4. Post Module
+- CRUD operation on posts.
+- Like/Unlike, share post.
+- Feed Page.
+- CRUD operation on comments.
+- CRUD operation on reply to comments.
+- Like/Unlike comments.
+
 ### Install dependencies for user-management-server.
 
 ```bash

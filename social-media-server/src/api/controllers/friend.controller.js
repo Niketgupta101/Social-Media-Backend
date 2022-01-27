@@ -10,10 +10,14 @@ const {
 
 // To verify emailId
 exports.fetchFriends = async (req, res, next) => {
-  const id = req.params.userId;
-
+  const { id, pageNo, pageLimit } = req.params;
+  
   try {
-    const response = await getFriends(id);
+    pageNo = pageNo || 1;
+    pageLimit = pageLimit || 20;
+    let offset = pageLimit*(pageNo-1);
+
+    const response = await getFriends(id, offset, pageLimit);
 
     res.status(201).json(response);
   } catch (error) {
@@ -22,10 +26,14 @@ exports.fetchFriends = async (req, res, next) => {
 };
 
 exports.fetchFriendRequests = async (req, res, next) => {
-  const id = req.params.userId;
+  const { id, pageNo, pageLimit } = req.params;
 
   try {
-    const response = await getFriendRequests(id);
+    pageNo = pageNo || 1;
+    pageLimit = pageLimit || 20;
+    let offset = pageLimit*(pageNo-1);
+
+    const response = await getFriendRequests(id, offset, pageLimit);
 
     res.status(201).json(response);
   } catch (error) {
@@ -82,10 +90,14 @@ exports.removeFriend = async (req, res, next) => {
 };
 
 exports.friendSuggestions = async (req, res, next) => {
-  const userId = req.params.userId;
+  const { userId, pageLimit, pageNo } = req.params.userId;
+  const { location, college_city, college_name } = req.user;
 
   try {
-    const response = await suggestFriends(userId, next);
+    pageNo = pageNo || 1;
+    pageLimit = pageLimit || 20;
+    let offset = pageLimit*(pageNo-1);
+    const response = await suggestFriends(userId, location, college_name, college_city, offset, pageLimit, next);
 
     res.status(201).json(response);
   } catch (error) {
