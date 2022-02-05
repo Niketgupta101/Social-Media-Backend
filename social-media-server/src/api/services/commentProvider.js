@@ -3,6 +3,7 @@ const Comment = require("../models/comment");
 const LikeComment = require("../models/likeComment");
 const Reply = require("../models/reply");
 const ErrorResponse = require("../utils/errorResponse");
+const { sendPostCommentMail } = require("./emailProvider");
 
 exports.getCommentById = async (commentId, next) => {
   try {
@@ -34,9 +35,12 @@ exports.getAllComments = async (postId, pageNo, pageLimit, next) => {
   }
 };
 
-exports.createNewComment = async (loggedUserId, postId, commentDetails, next) => {
+exports.createNewComment = async (loggedUserId, loggedUserName, isNotification, postId, commentDetails, next) => {
     try {
-        let post = await Post.findOne({ _id: postId }, { isCommentBlocked: 1, commentCount: 1 });
+        let post = await Post.findOne(
+          { _id: postId }, 
+          { isCommentBlocked: 1, commentCount: 1, postedBy: 1 })
+          .populate('postedBy', { emailId: 1 });
         
         if(!post) return next(new ErrorResponse("No post found with fiven id", 404));
 
@@ -48,9 +52,12 @@ exports.createNewComment = async (loggedUserId, postId, commentDetails, next) =>
             commentedBy: loggedUserId,
             postId,
         }
-        post.commentCount = post.commentCount - 1;
+        post.commentCount = post.commentCount + 1;
         await post.save();
         const newComment = await Comment.create(commentData);
+
+        if(isNotification)
+        await sendPostCommentMail(post.postedBy.emailId, loggedUserName, newComment._id, post._id);
 
         return { success: true, comment: newComment };
     } catch (error) {

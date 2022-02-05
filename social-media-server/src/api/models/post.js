@@ -14,7 +14,9 @@ const postSchema = new mongoose.Schema({
 
   description: {  type: String,  text: true,  index: true },
 
-  taggedUsers: [{ userId: {  type: String,  ref: `User`} }],
+  postTags: [ String ],
+
+  taggedUsers: [{ type: Schema.ObjectId, ref: 'User' }],
 
   likeCount: {  type: Number,  default: 0 },
 

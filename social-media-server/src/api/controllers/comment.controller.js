@@ -37,11 +37,13 @@ exports.fetchAllComments = async (req, res, next) => {
 
 exports.createComment = async (req, res, next) => {
   const loggedUserId = req.user._id;
+  const loggedUserName = req.user.username;
+  const isNotification = req.user.Settings.Notifications;
   const { postId } = req.params;
   const commentDetails = req.body;
 
   try {
-    const response = await createNewComment(loggedUserId, postId, commentDetails, next);
+    const response = await createNewComment(loggedUserId, loggedUserName, isNotification, postId, commentDetails, next);
 
     res.status(201).json(response);
   } catch (error) {

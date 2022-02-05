@@ -7,7 +7,10 @@ const {
   deletePost,
   likePost,
   sharePost,
-  getFeed
+  getFeed,
+  getPostByTag,
+  getPostByMostPopularTags,
+  getMostLikedPosts
 } = require("../../controllers/post.controller");
 const { protect } = require("../../middlewares/auth");
 const upload = require('../../utils/multer');
@@ -37,5 +40,14 @@ router.post( `/share/:postId`, protect, sharePost );
 
 // h. Get a feed page. (pagination)
 router.get( `/:pageNo/:pageLimit`, getFeed );
+
+// i Get all post with tag. (pagination)
+router.get( `/tag/:tag/:pageNo/:pageLimit`, getPostByTag );
+
+//j. get posts with most popular tags. (pagination)
+router.get(`/tag/mostPopular/:pageNo/:pageLimit`, getPostByMostPopularTags);
+
+//k. get most liked posts.
+router.get('/mostLiked/:pageNo/:pageLimit', getMostLikedPosts);
 
 module.exports = router;

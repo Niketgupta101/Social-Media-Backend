@@ -35,3 +35,32 @@ exports.sendResetPasswordMail = async (emailId, resetToken) => {
         throw error;   
     }
 }
+
+exports.sendPostCommentMail = async (emailId, commentedBy, commentId, postId) => {
+    try {
+        const postUrl = `${clientUrl}/post/${postId}`
+        const commentUrl = `${clientUrl}/post/comment/${commentId}`
+        const subject = 'Post Comment Notification.'
+
+        const message = `<h1>${commentedBy} has commented to your <a href=${postUrl}>post</a></h1>
+                <a href=${commentUrl}>View Comment</a>`;
+
+        await axios.post(`${baseUrl}/sendEmail`, { to: emailId, subject, html: message });
+    } catch (error) {
+        throw error;
+    }
+}
+
+exports.sendMailForTaggedUser = async (emailId, postId, taggedBy) => {
+    try {
+        const postUrl = `${clientUrl}/post/${postId}`
+        const subject = 'Social media activity Notification.'
+
+        const message = `<h1>${taggedBy} has tagged to you his/her post</h1>
+                <a href=${postUrl}>View Comment</a>`;
+
+        await axios.post(`${baseUrl}/sendEmail`, { to: emailId, subject, html: message });
+    } catch (error) {
+        throw error;
+    }
+}

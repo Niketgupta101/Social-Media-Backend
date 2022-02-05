@@ -141,7 +141,7 @@ exports.suggestFriends = async (userId, location, college_city, college_name, of
       ]
     }, { _id: 0, fromUser: 1, toUser: 1 });
 
-    let friendToFriendList = [],
+    let friendToFriendList = [];
     for (let friend of friendList)
     {
       let friendToFriend = await Friends.find({$or: [

@@ -7,6 +7,9 @@ const {
   likePostWithId,
   sharePostWithId,
   fetchFeedPage,
+  fetchPostsByTag,
+  fetchMostLikedPosts,
+  fetchPostByMostPopularTag,
 } = require("../services/postProvider.js");
 
 // Get all posts of a user with userId ( pagination )
@@ -25,11 +28,12 @@ exports.fetchAllPosts = async (req, res, next) => {
 
 exports.createPost = async (req, res, next) => {
   const loggedUserId = req.user._id;
+  const loggedUserName = req.user.username;
   const path = req.file.path;
   const postDetails = req.body;
 
   try {
-    const response = await createNewPost(loggedUserId, path, postDetails, next);
+    const response = await createNewPost(loggedUserId, loggedUserName, path, postDetails, next);
 
     res.status(201).json(response);
   } catch (error) {
@@ -106,7 +110,7 @@ exports.sharePost = async (req, res, next) => {
 };
 
 exports.getFeed = async (req, res, next) => {
-  const { pageNo, pageLimit } = req.params;
+  let { pageNo, pageLimit } = req.params;
   const loggedUserId = req.user._id;
 
   try {
@@ -117,6 +121,55 @@ exports.getFeed = async (req, res, next) => {
 
     res.status(201).json(response);
   } catch (error) {
+    next(error);
+  }
+};
+
+exports.getPostByTag = async (req, res, next) => {
+  let { tag, pageNo, pageLimit } = req.params;
+
+  try {
+    pageNo = pageNo || 1;
+    pageLimit = pageLimit || 20;
+    let offset = pageLimit*(pageNo-1);
+    const response = await fetchPostsByTag(tag, offset, pageLimit, next);
+
+    res.status(201).json(response);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+exports.getPostByMostPopularTags = async (req, res, next) => {
+  let { pageNo, pageLimit } = req.params;
+
+  try {
+    pageNo = pageNo || 1;
+    pageLimit = pageLimit || 20;
+    let offset = pageLimit*(pageNo-1);
+    const response = await fetchPostByMostPopularTag(offset, pageLimit, next);
+
+    res.status(201).json(response);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+exports.getMostLikedPosts = async (req, res, next) => {
+  let { pageNo, pageLimit } = req.params;
+
+  try {
+    pageNo = pageNo || 1;
+    pageLimit = pageLimit || 20;
+    let offset = pageLimit*(pageNo-1);
+    const response = await fetchMostLikedPosts(offset, pageLimit, next);
+
+    res.status(201).json(response);
+  } catch (error) {
+    console.log(error);
     next(error);
   }
 };
