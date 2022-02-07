@@ -1,5 +1,6 @@
 const {
   getAllPosts,
+  fetchTaggedPosts,
   createNewPost,
   fetchPostWithId,
   editPostWithId,
@@ -19,6 +20,20 @@ exports.fetchAllPosts = async (req, res, next) => {
 
   try {
     const response = await getAllPosts(userId, loggedUser, pageNo, pageLimit, next);
+
+    res.status(201).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all taggedPosts of a user with userId ( pagination )
+exports.getTaggedPosts = async (req, res, next) => {
+  const { userId, pageNo, pageLimit } = req.params;
+  const loggedUser = req.user;
+
+  try {
+    const response = await fetchTaggedPosts(userId, loggedUser, pageNo, pageLimit, next);
 
     res.status(201).json(response);
   } catch (error) {

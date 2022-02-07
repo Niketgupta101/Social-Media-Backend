@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   fetchAllPosts,
+  getTaggedPosts,
   createPost,
   fetchPost,
   editPost,
@@ -19,6 +20,9 @@ const router = express.Router();
 
 // a. Get all posts of a user with userId ( pagination )
 router.get( `/:userId/:pageNo/:pageLimit`, protect, fetchAllPosts );
+
+// Fetch all taggedPosts for the user.
+router.get('/taggedPosts/:userId/:pageNo/:pageLimit', protect, getTaggedPosts);
 
 // b. Create a Post.
 router.post( `/`, protect, upload.single('image'), createPost );

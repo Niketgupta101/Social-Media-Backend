@@ -1,7 +1,10 @@
 const Friends = require("../models/friend");
 const Users = require("../models/user");
 const ErrorResponse = require("../utils/errorResponse");
-const mongoose = require('mongoose').Types.ObjectId;
+const User = require('../models/user');
+const Notification = require('../models/notification');
+const { sendMailForApproveFriendRequest, sendMailForSentFriendRequest } = require('../services/emailProvider');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 exports.getFriends = async (id, offset, pageLimit) => {
   try {
@@ -50,14 +53,14 @@ exports.sendRequest = async (id, userId, next) => {
     if (isFriend && isFriend.progress === "accepted")
       return next(new ErrorResponse("Already a friend.", 400));
 
-    let isBlocked = await Friends.findOne(
+    let toUser = await User.findOne(
       { _id: ObjectId(id) },
-      { _id: 0, blockedUsers: 1 }
+      { blockedUsers: 1, username: 1, Settings: 1, emailId: 1 }
     );
 
-    if (!isBlocked) return next(new ErrorResponse(`User doesn't exist.`, 404));
+    if (!toUser) return next(new ErrorResponse(`User doesn't exist.`, 404));
 
-    let index = await isBlocked.blockedUsers.findIndex(
+    let index = await toUser.blockedUsers.findIndex(
       (i) => i === ObjectId(userId)
     );
     if (index !== -1)
@@ -69,13 +72,26 @@ exports.sendRequest = async (id, userId, next) => {
       progress: "requested",
     });
 
+    // send email notification to the user whom request is sent.
+    if(toUser.Settings.Notifications)
+    await sendMailForSentFriendRequest(toUser.emailId, loggedUserName);
+
+    // send in app notification to the user whom request is sent.
+    let notification = {
+      content: `${loggedUserName} has sent you a friend request`,
+      user: toUser._id,
+      typeOfNoti: 'User',
+      idOfType: userId
+    }
+    await Notification.create(notification);    
+
     return { success: true, message: "Friend Request Sent." };
   } catch (error) {
     throw error;
   }
 };
 
-exports.approveRequest = async (id, userId, next) => {
+exports.approveRequest = async (id, userId, loggedUserName, next) => {
   try {
     let request = await Friends.findOne({
       fromUser: ObjectId(userId),
@@ -89,6 +105,21 @@ exports.approveRequest = async (id, userId, next) => {
     request.progress = "accepted";
 
     await request.save();
+
+    const friendUser = await User.findOne({ _id: ObjectId(userId) }, { username: 1, Settings: 1, emailId: 1 });
+
+    // send email notification to the user whose request is accepted.
+    if(friendUser.Settings.Notifications)
+    await sendMailForApproveFriendRequest(friendUser.emailId, loggedUserName);
+
+    // send in app notification to the user whose request is accepted.
+    let notification = {
+      content: `${loggedUserName} has accepted your friend request`,
+      user: friendUser._id,
+      typeOfNoti: 'User',
+      idOfType: id
+    }
+    await Notification.create(notification);
 
     return { success: true, message: "Friend request approved." };
   } catch (error) {

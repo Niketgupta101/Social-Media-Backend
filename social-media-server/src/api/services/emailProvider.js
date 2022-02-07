@@ -51,6 +51,21 @@ exports.sendPostCommentMail = async (emailId, commentedBy, commentId, postId) =>
     }
 }
 
+exports.sendCommentReplyMail = async (emailId, repliedBy, replyId, commentId) => {
+    try {
+        const replyUrl = `${clientUrl}/post/comment/reply/${replyId}`
+        const commentUrl = `${clientUrl}/post/comment/${commentId}`
+        const subject = 'Comment Reply Notification.'
+
+        const message = `<h1>${repliedBy} has replied to your <a href=${commentUrl}>comment</a></h1>
+                <a href=${replyUrl}>View Reply</a>`;
+
+        await axios.post(`${baseUrl}/sendEmail`, { to: emailId, subject, html: message });
+    } catch (error) {
+        throw error;
+    }
+}
+
 exports.sendMailForTaggedUser = async (emailId, postId, taggedBy) => {
     try {
         const postUrl = `${clientUrl}/post/${postId}`
@@ -64,3 +79,32 @@ exports.sendMailForTaggedUser = async (emailId, postId, taggedBy) => {
         throw error;
     }
 }
+
+exports.sendMailForApproveFriendRequest = async (emailId, loggedUserName) => {
+    try {
+        const requestsUrl = `${clientUrl}/user/friendRequests`
+        const subject = 'Social media activity Notification.'
+
+        const message = `<h1>${loggedUserName} has accepted tour friend request.</h1>
+                <a href=${requestsUrl}>View Friend Requests</a>`;
+
+        await axios.post(`${baseUrl}/sendEmail`, { to: emailId, subject, html: message });
+    } catch (error) {
+        throw error;
+    }
+}
+
+exports.sendMailForSentFriendRequest = async (emailId, loggedUserName) => {
+    try {
+        const requestsUrl = `${clientUrl}/friendRequests`
+        const subject = 'Social media activity Notification.'
+
+        const message = `<h1>${loggedUserName} has sent you a friend request</h1>
+                <a href=${requestsUrl}>View Friend Requests</a>`;
+
+        await axios.post(`${baseUrl}/sendEmail`, { to: emailId, subject, html: message });
+    } catch (error) {
+        throw error;
+    }
+}
+

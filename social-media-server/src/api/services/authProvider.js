@@ -11,10 +11,7 @@ exports.registerUser = async (user, path) => {
         const { secure_url, public_id } = await uploadPhoto(path);
 
         const data = {
-            Name: user.Name,
-            username: user.username,
-            emailId: user.emailId,
-            password: user.password,
+            ...user,
             avatar: secure_url,
             cloudinary_id: public_id
         };
@@ -27,6 +24,7 @@ exports.registerUser = async (user, path) => {
 
         return { newUser, token };
     } catch (error) {
+        console.log(error);
         throw error;
     }
 }

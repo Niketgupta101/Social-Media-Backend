@@ -8,7 +8,7 @@ const {
   suggestFriends,
 } = require("../services/friendProvider");
 
-// To verify emailId
+// To fetch all friends of the user with userId.
 exports.fetchFriends = async (req, res, next) => {
   const { id, pageNo, pageLimit } = req.params;
   

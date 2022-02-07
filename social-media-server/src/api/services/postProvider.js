@@ -4,6 +4,7 @@ const User = require("../models/user");
 const LikePost = require("../models/likePost");
 const Friends = require("../models/friend");
 const Follow = require("../models/follow");
+const Notification = require('../models/notification');
 const TaggedUser = require("../models/taggedUsers");
 const ErrorResponse = require("../utils/errorResponse");
 const { changePhoto, uploadPhoto, deletePhoto } = require("./uploadProvider");
@@ -34,6 +35,43 @@ exports.getAllPosts = async (userId, loggedUser, pageNo, pageLimit, next) => {
     }
 
     const postList = await Post.find({ postedBy: userId })
+      .skip((pageNo - 1) * pageLimit)
+      .limit(pageLimit);
+
+    return { success: true, postList };
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.fetchTaggedPosts = async (userId, loggedUser, pageNo, pageLimit, next) => {
+  try {
+    if (userId === loggedUser._id) {
+      let postList = await TaggedUser.find({ userTagged: userId })
+        .populate('postId')
+        .populate('userTagged',{ username: 1, Name: 1, avatar: 1 })
+        .skip((pageNo - 1) * pageLimit)
+        .limit(pageLimit);
+      return { success: true, postList };
+    }
+    const user = await User.findOne({ _id: userId });
+    if (!user)
+      return next(new ErrorResponse("No user exists with the given id", 404));
+
+    if (loggedUser.Settings.privateAccount) {
+      const userFriends = await Friends.findOne({ user: userId });
+      const index = userFriends.findIndex(
+        (i) => i.user.valueOf() === loggedUser._id
+      );
+      if (index === -1)
+        return next(
+          new ErrorResponse(`Can't fetch as user's account is private.`, 400)
+        );
+    }
+
+    const postList = await TaggedUser.find({ userTagged: userId })
+      .populate('postId')
+      .populate('userTagged',{ username: 1, Name: 1, avatar: 1 })
       .skip((pageNo - 1) * pageLimit)
       .limit(pageLimit);
 
@@ -86,8 +124,18 @@ exports.createNewPost = async (loggedUserId, loggedUserName, path, postDetails, 
 
       await TaggedUser.create({ postId: newPost._id, userTagged: user });
 
+      // send email notification to the user tagged to the post
       if(isUser.Settings.Notifications)
       await sendMailForTaggedUser(isUser.emailId, newPost._id, loggedUserName);
+
+      // send in app notification to the user tagged to the post
+      let notification = {
+        content: `${loggedUserName} has tagged you to his post.`,
+        user: user,
+        typeOfNoti: 'Post',
+        idOfType: newPost._id
+      }
+      await Notification.create(notification);
     }
 
     return { success: true, postData: newPost };
@@ -123,13 +171,7 @@ exports.fetchPostById = async (loggedUser, postId, next) => {
   }
 };
 
-exports.editPostWithId = async (
-  loggedUserId,
-  postId,
-  postDetails,
-  path,
-  next
-) => {
+exports.editPostWithId = async ( loggedUserId, postId, postDetails, path, next) => {
   try {
     let post = await Post.findOne({ _id: postId });
 

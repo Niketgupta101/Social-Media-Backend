@@ -33,6 +33,7 @@ app.post('/sendEmail', (req,res) => {
     transporter.sendMail(mailOptions, function(error, info) {
         if(error)
         {
+            console.log(error);
         res.status(400).send('mail not sent');
         }
         else{

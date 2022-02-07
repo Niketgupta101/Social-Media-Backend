@@ -2,8 +2,9 @@ const Post = require("../models/post");
 const Comment = require("../models/comment");
 const LikeComment = require("../models/likeComment");
 const Reply = require("../models/reply");
+const Notification = require("../models/notification");
 const ErrorResponse = require("../utils/errorResponse");
-const { sendPostCommentMail } = require("./emailProvider");
+const { sendPostCommentMail, sendCommentReplyMail } = require("./emailProvider");
 
 exports.getCommentById = async (commentId, next) => {
   try {
@@ -56,8 +57,18 @@ exports.createNewComment = async (loggedUserId, loggedUserName, isNotification, 
         await post.save();
         const newComment = await Comment.create(commentData);
 
+        // send email notification to the user.
         if(isNotification)
         await sendPostCommentMail(post.postedBy.emailId, loggedUserName, newComment._id, post._id);
+
+        // send in app notification to the user.
+        let notification = {
+          content: `${loggedUserName} has commented to your post."`,
+          user: post.postedBy,
+          typeOfNoti: 'Comment',
+          idOfType: newComment._id
+        }
+        await Notification.create(notification);
 
         return { success: true, comment: newComment };
     } catch (error) {
@@ -128,9 +139,10 @@ exports.likeCommentById = async (loggedUserId, commentId, next) => {
   }
 }
 
-exports.createNewReply = async (loggedUserId, commentId, replyDetails, next) => {
+exports.createNewReply = async (loggedUserId, loggedUserName, commentId, replyDetails, next) => {
   try {
-      let comment = await Comment.findOne({ _id: commentId }, { replyCount: 1 });
+      let comment = await Comment.findOne({ _id: commentId }, { replyCount: 1 })
+        .populate('commentedBy', { emailId: 1 });
       
       if(!comment) return next(new ErrorResponse("No comment found with fiven id", 404));
 
@@ -142,6 +154,19 @@ exports.createNewReply = async (loggedUserId, commentId, replyDetails, next) => 
       comment.replyCount = comment.replyCount + 1;
       await comment.save();
       const newReply = await Reply.create(replyData);
+
+      // send email notification to the user on whose comment loggedUser has replied.
+      if(isNotification)
+      await sendCommentReplyMail(comment.commentedBy.emailId, loggedUserName, newReply._id, comment._id);
+
+      // send in app notification to the user on whose comment loggedUser has replied.
+      let notification = {
+        content: `${loggedUserName} has replied to your comment."`,
+        user: comment.commentedBy,
+        typeOfNoti: 'Reply',
+        idOfType: newReply._id
+      }
+      await Notification.create(notification);
 
       return { success: true, reply: newReply };
   } catch (error) {

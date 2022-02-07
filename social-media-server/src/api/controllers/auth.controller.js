@@ -14,6 +14,7 @@ exports.register = async (req, res, next) => {
 
         res.status(201).json({ success: true, newUser, token});
     } catch (error) {
+        console.log(error);
         next(error);
     }
 }
